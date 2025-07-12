@@ -50,7 +50,7 @@ Catatan penting:
 - Tools ini gratis dan bukan API resmi Google, jadi wajar kalau ada batasan dan kadang kena blok.  
 - Pakailah dengan bijak supaya gak merugikan pihak lain dan akun kamu tetap aman.
 
-Semoga tools ini bisa membantu pekerjaan SEO kamu sehari-hari. Kalau ada pertanyaan atau mau request fitur, silakan hubungi saya di Telegram: @forbidden220222
+Semoga tools ini bisa membantu pekerjaan SEO kamu sehari-hari. Kalau ada pertanyaan atau mau request fitur, silakan hubungi saya di Telegram: [@forbidden220222](https://t.me/forbidden220222)
 
 Terima kasih sudah memakai tools ini, semoga backlink kamu cepat terindex dan ranking di Google makin naik!
 
