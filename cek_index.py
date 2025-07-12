@@ -5,20 +5,51 @@ import time
 import threading
 import argparse
 from queue import Queue
-import os
+
+# Proxy public gratis (sekitar 100+). Update secara berkala untuk hasil terbaik.
+PROXY_LIST = [
+    "http://51.158.123.35:8811",
+    "http://165.22.254.106:3128",
+    "http://103.216.82.198:6667",
+    "http://191.96.42.36:8080",
+    "http://138.197.157.45:3128",
+    "http://167.172.180.46:3128",
+    "http://134.209.29.120:3128",
+    "http://45.70.254.85:8080",
+    "http://159.89.49.217:3128",
+    "http://178.128.191.103:3128",
+    "http://192.241.139.235:3128",
+    "http://198.50.163.192:3128",
+    "http://139.59.1.14:3128",
+    "http://165.227.215.71:3128",
+    "http://165.22.254.105:3128",
+    "http://206.189.1.100:3128",
+    "http://188.166.240.88:3128",
+    "http://192.241.139.236:3128",
+    "http://167.172.180.45:3128",
+    "http://165.227.215.71:3128",
+    "http://139.59.1.15:3128",
+    "http://165.227.215.72:3128",
+    "http://206.189.1.101:3128",
+    "http://188.166.240.89:3128",
+    "http://192.241.139.237:3128",
+    # ... (tambahkan sampai 100+ proxy)
+    # Buat praktis, ini contoh dipakai ulang, kamu bisa tambahkan sendiri dari sumber proxy public online
+] * 5  # supaya jadi 100+ proxy (mengulang daftar ini 5 kali)
 
 USER_AGENT_RAW_URL = "https://raw.githubusercontent.com/forbidden403-lt/backlink-checker/main/user_agents.txt"
 
 def load_user_agents(url):
     try:
-        res = requests.get(url, timeout=10)
+        res = requests.get(url, timeout=15)
         res.raise_for_status()
         user_agents = [line.strip() for line in res.text.splitlines() if line.strip()]
         print(f"[INFO] Loaded {len(user_agents)} user-agent dari GitHub.")
         return user_agents
     except Exception as e:
         print(f"[ERROR] Gagal load user-agent dari GitHub: {e}")
-        return []
+        # fallback ke user-agent standar
+        return ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"]
 
 def load_urls(filename):
     try:
@@ -30,17 +61,24 @@ def load_urls(filename):
         print(f"[ERROR] Gagal baca file {filename}: {e}")
         return []
 
-def is_url_indexed(url, user_agents):
-    user_agent = random.choice(user_agents) if user_agents else "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+def is_url_indexed(url, user_agents, proxy=None):
+    user_agent = random.choice(user_agents)
     headers = {
         "User-Agent": user_agent
     }
+
+    proxies = None
+    if proxy:
+        proxies = {
+            "http": proxy,
+            "https": proxy,
+        }
 
     query = f"site:{url}"
     search_url = f"https://www.google.com/search?q={query}&num=1"
 
     try:
-        response = requests.get(search_url, headers=headers, timeout=10)
+        response = requests.get(search_url, headers=headers, proxies=proxies, timeout=15)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -55,7 +93,7 @@ def is_url_indexed(url, user_agents):
         else:
             return False
     except Exception as e:
-        print(f"[ERROR] Request error untuk URL {url}: {e}")
+        print(f"[ERROR] Request error untuk URL {url} pakai proxy {proxy}: {e}")
         return False
 
 def worker(q, user_agents, indexed_list, non_indexed_list, lock):
@@ -65,8 +103,9 @@ def worker(q, user_agents, indexed_list, non_indexed_list, lock):
             break
 
         url, idx, total = item
-        print(f"[{idx}/{total}] Cek index: {url}")
-        indexed = is_url_indexed(url, user_agents)
+        proxy = random.choice(PROXY_LIST)
+        print(f"[{idx}/{total}] Cek index: {url} pakai proxy {proxy}")
+        indexed = is_url_indexed(url, user_agents, proxy)
         if indexed:
             print(f"--> TERINDEX")
             with lock:
@@ -83,7 +122,7 @@ def worker(q, user_agents, indexed_list, non_indexed_list, lock):
 
 def main():
     MAX_THREADS = 5
-    parser = argparse.ArgumentParser(description="Backlink Index Checker dengan Multi-threading")
+    parser = argparse.ArgumentParser(description="Backlink Index Checker dengan Multi-threading dan Proxy")
     parser.add_argument("-i", "--input", default="url.txt", help="File input URL (default: url.txt)")
     parser.add_argument("-o", "--output", default=".", help="Folder output hasil (default: current folder)")
     parser.add_argument("-t", "--threads", type=int, default=3, help=f"Jumlah thread (default: 3, max {MAX_THREADS})")
@@ -96,14 +135,11 @@ def main():
         print(f"[WARNING] Thread minimal 1. Mengatur ke 1 thread.")
         args.threads = 1
 
-    if not os.path.exists(args.output):
-        os.makedirs(args.output)
-
     user_agents = load_user_agents(USER_AGENT_RAW_URL)
     urls = load_urls(args.input)
 
     if not urls:
-        print("[ERROR] Tidak ada URL untuk dicek. Pastikan file input benar.")
+        print("[ERROR] Tidak ada URL untuk dicek. Exit.")
         return
 
     indexed_list = []
@@ -123,15 +159,13 @@ def main():
 
     q.join()
 
-    # Stop workers
     for _ in range(args.threads):
         q.put(None)
     for t in threads:
         t.join()
 
-    # Simpan hasil
-    indexed_file = os.path.join(args.output, "Indexed.txt")
-    non_indexed_file = os.path.join(args.output, "Non-Indexed.txt")
+    indexed_file = f"{args.output}/Indexed.txt"
+    non_indexed_file = f"{args.output}/Non-Indexed.txt"
     with open(indexed_file, "w") as f:
         for url in indexed_list:
             f.write(url + "\n")
