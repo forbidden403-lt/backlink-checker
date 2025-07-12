@@ -5,6 +5,7 @@ import time
 import threading
 import argparse
 from queue import Queue
+import os
 
 USER_AGENT_RAW_URL = "https://raw.githubusercontent.com/forbidden403-lt/backlink-checker/main/user_agents.txt"
 
@@ -34,14 +35,14 @@ def is_url_indexed(url, user_agents):
     headers = {
         "User-Agent": user_agent
     }
-    
+
     query = f"site:{url}"
     search_url = f"https://www.google.com/search?q={query}&num=1"
-    
+
     try:
         response = requests.get(search_url, headers=headers, timeout=10)
         response.raise_for_status()
-        
+
         soup = BeautifulSoup(response.text, "html.parser")
         result_div = soup.find("div", id="search")
         if result_div:
@@ -62,7 +63,7 @@ def worker(q, user_agents, indexed_list, non_indexed_list, lock):
         item = q.get()
         if item is None:
             break
-        
+
         url, idx, total = item
         print(f"[{idx}/{total}] Cek index: {url}")
         indexed = is_url_indexed(url, user_agents)
@@ -74,9 +75,9 @@ def worker(q, user_agents, indexed_list, non_indexed_list, lock):
             print(f"--> BELUM TERINDEX")
             with lock:
                 non_indexed_list.append(url)
-        
-        delay = random.uniform(3, 7)
-        print(f"Delay {delay:.2f} detik sebelum cek URL berikutnya...\n")
+
+        delay = random.choice([30, 60, 90])
+        print(f"Delay {delay} detik sebelum cek URL berikutnya...\n")
         time.sleep(delay)
         q.task_done()
 
@@ -95,42 +96,49 @@ def main():
         print(f"[WARNING] Thread minimal 1. Mengatur ke 1 thread.")
         args.threads = 1
 
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+
     user_agents = load_user_agents(USER_AGENT_RAW_URL)
     urls = load_urls(args.input)
-    
+
+    if not urls:
+        print("[ERROR] Tidak ada URL untuk dicek. Pastikan file input benar.")
+        return
+
     indexed_list = []
     non_indexed_list = []
     lock = threading.Lock()
     q = Queue()
-    
+
     total = len(urls)
     for idx, url in enumerate(urls, 1):
         q.put((url, idx, total))
-    
+
     threads = []
     for _ in range(args.threads):
         t = threading.Thread(target=worker, args=(q, user_agents, indexed_list, non_indexed_list, lock))
         t.start()
         threads.append(t)
-    
+
     q.join()
-    
+
     # Stop workers
     for _ in range(args.threads):
         q.put(None)
     for t in threads:
         t.join()
-    
+
     # Simpan hasil
-    indexed_file = f"{args.output}/Indexed.txt"
-    non_indexed_file = f"{args.output}/Non-Indexed.txt"
+    indexed_file = os.path.join(args.output, "Indexed.txt")
+    non_indexed_file = os.path.join(args.output, "Non-Indexed.txt")
     with open(indexed_file, "w") as f:
         for url in indexed_list:
             f.write(url + "\n")
     with open(non_indexed_file, "w") as f:
         for url in non_indexed_list:
             f.write(url + "\n")
-    
+
     print(f"[DONE] Selesai cek semua URL.")
     print(f"Indexed.txt = {len(indexed_list)} URL")
     print(f"Non-Indexed.txt = {len(non_indexed_list)} URL")
