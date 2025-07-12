@@ -1,65 +1,58 @@
 Backlink Index Checker
 
-Halo teman-teman SEO!  
+Halo teman-teman SEO!
 
-Ini adalah tools sederhana tapi powerful buat ngecek apakah backlink atau URL yang kamu pasang sudah terindex Google atau belum. Karena kita tahu, backlink tanpa index itu kayak beli tiket konser tapi gak jadi nonton — sia-sia kan?
+Tools sederhana ini saya buat untuk bantu kamu yang sering cek apakah backlink yang kamu pasang sudah terindex Google atau belum. Kadang, pasang backlink udah capek-capek tapi ternyata belum terindex sama Google, kan sayang banget. Tools ini simple tapi cukup powerful untuk cek banyak URL sekaligus.
 
----
+Kenapa saya buat tools ini?
 
-Kenapa tools ini dibuat?
+Sebagai SEO specialist, saya juga sering harus cek ribuan backlink. Kalau manual, makan waktu banget. Tools yang ada kadang mahal dan terlalu kompleks. Makanya saya bikin ini: gampang, gratis, dan bisa dipakai sendiri kapan aja.
 
-Sebagai SEO specialist, saya sering butuh cek ribuan backlink sekaligus. Manual? Bisa pingsan. Pakai tools mahal? Belum tentu sesuai kebutuhan. Jadi saya buat tools ini, simple, gratis, dan bisa kamu pakai sendiri kapan saja.
+Apa yang tools ini bisa lakukan?
 
----
+- Cek apakah backlink kamu sudah terindex di Google secara real-time
+- Pakai multi-threading biar proses lebih cepat tapi tetep aman, maksimal 5 thread
+- Random User-Agent biar request gak gampang ketahuan bot
+- Ada delay random antara 30 sampai 90 detik supaya Google gak curiga
+- Bisa pakai proxy gratis (proxy aktif penting banget kalau mau cek banyak backlink)
+- Hasilnya langsung dipisah: yang sudah terindex dan yang belum
 
-Apa yang bisa tools ini?
+Cara pakai?
 
-- Cek index backlink di Google secara real-time  
-- Pakai multi-threading supaya lebih cepat, tapi tetep aman dengan maksimal 5 thread  
-- Random User-Agent dari daftar lengkap supaya request kita gak gampang ketahuan bot  
-- Ada delay random antara 3-7 detik, supaya Google gak curiga  
-- Hasilnya langsung terpisah jadi dua file: yang sudah terindex, dan yang belum  
+1. Siapkan file url.txt berisi URL backlink, satu baris satu URL. Contoh:
 
----
+https://contohsitus.com/backlink1  
+https://contohsitus.com/backlink2
 
-Cara pakai gampang banget:
+2. Siapkan file User-agent.txt berisi daftar user-agent yang cukup banyak (minimal 100 user-agent). Bisa cari di internet banyak list user-agent gratis.
 
-1. Siapkan file `url.txt` (atau nama lain)  
-   Isikan URL backlink yang mau dicek, satu URL per baris. Contoh:
+3. Siapkan file proxy.txt berisi daftar proxy publik gratis (kalau kamu mau cek banyak backlink). Proxy aktif dan banyak itu penting supaya gak kena blok Google.
 
-   https://situscontoh.com/backlink1  
-   https://situscontoh.com/backlink2
+4. Pastikan Python sudah terinstall dan module requests + beautifulsoup4 sudah siap:
 
-2. Pastikan Python sudah terinstall, dan module `requests` + `beautifulsoup4` sudah siap:
+pip install requests beautifulsoup4
 
-   pip install requests beautifulsoup4
+5. Jalankan scriptnya:
 
-3. Jalankan script dengan perintah:
+python cek_index.py -i url.txt -o hasil -t 3
 
-   python cek_index.py -i url.txt -o hasil -t 3
+-t itu jumlah thread, maksimal 5 (default 3)
 
-   - `-i` = file input URL  
-   - `-o` = folder untuk simpan hasil (bisa folder baru atau `.`)  
-   - `-t` = jumlah thread, maksimal 5 (default 3)  
+Nanti hasilnya di folder 'hasil' (atau folder yang kamu pilih) akan ada dua file:
 
-4. Tunggu prosesnya selesai, kamu bakal dapet dua file:  
-   - `Indexed.txt` — backlink yang sudah Google kenal dan index  
-   - `Non-Indexed.txt` — backlink yang belum terindex, bisa kamu follow-up  
+Indexed.txt : backlink yang sudah Google kenal  
+Non-Indexed.txt : backlink yang belum terindex
 
----
+Catatan penting:
 
-Catatan kecil
+- Google cukup sensitif dengan request yang terlalu cepat atau banyak, makanya harus pakai delay dan batasi jumlah thread.  
+- Proxy publik kadang gak stabil, jadi harus pakai banyak dan cek secara berkala.  
+- Tools ini gratis dan bukan API resmi Google, jadi wajar kalau ada batasan dan kadang kena blok.  
+- Pakailah dengan bijak supaya gak merugikan pihak lain dan akun kamu tetap aman.
 
-- Google agak sensitif kalau request terlalu cepat, makanya saya kasih delay dan batasi thread.  
-- Tools ini gratis, jadi jangan berharap seperti API resmi Google ya. Tapi buat cek backlink skala kecil-sedang ini sudah sangat membantu!  
-- Gunakan dengan bijak dan jangan spam request ke Google.  
+Semoga tools ini bisa membantu pekerjaan SEO kamu sehari-hari. Kalau ada pertanyaan atau mau request fitur, silakan hubungi saya di Telegram: @forbidden220222
 
----
+Terima kasih sudah memakai tools ini, semoga backlink kamu cepat terindex dan ranking di Google makin naik!
 
-Penutup
-
-Semoga tools ini bermanfaat buat kamu yang sedang serius bangun backlink. Kalau ada request fitur atau butuh bantuan, jangan ragu kontak saya via Telegram: [@forbidden220222](https://t.me/forbidden220222)  
-
-Salam SEO dan tetap semangat optimasi!  
-
-— forbidden403-lt  
+Salam optimasi,  
+forbidden403-lt
